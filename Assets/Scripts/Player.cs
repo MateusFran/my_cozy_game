@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -14,14 +15,30 @@ public class Player : MonoBehaviour
     [Header("System")]
     [SerializeField] private InventoryManager invManager;
 
+    [Header("Interactable")]
+    [SerializeField] private bool isInteractable;
+    [SerializeField] private Collider2D colInteractable;
+
+    [Header("UI")]
+    [SerializeField] private Animator ui_imageAnim;
+
     void Start()
     {
-        
+
     }
 
     void Update()
     {
         movement = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
+        if (Input.GetKeyDown(KeyCode.E) && isInteractable){
+            if (invManager.AddItem(colInteractable.gameObject.GetComponent<ItemObject>().ownItem)){
+                Destroy(colInteractable.gameObject);
+                colInteractable = null;
+            }
+        }
+        if (!isInteractable){ ui_imageAnim.SetTrigger("e_fadeOut");}
+        //else {ui_imageAnim.SetTrigger("e_fadeOut");}
     }
 
     void FixedUpdate()
@@ -38,9 +55,17 @@ public class Player : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D col)
     {
         if (col.gameObject.tag == "Item"){
-            if (invManager.AddItem(col.gameObject.GetComponent<ItemObject>().ownItem)){
-                Destroy(col.gameObject);
-            }
+            isInteractable = true;
+            colInteractable = col;
+
+            ui_imageAnim.SetTrigger("e_fadeIn");
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D col){
+        if (colInteractable.gameObject.tag == "Item"){
+            isInteractable = false;
+            //ui_imageAnim.SetTrigger("e_fadeOut");
         }
     }
 }
